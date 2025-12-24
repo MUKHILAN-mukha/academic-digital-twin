@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from datetime import datetime
 
 from app.models import AcademicEvent, DigitalTwin
@@ -10,7 +9,6 @@ def update_digital_twin(student_id: str, db: Session):
     Recomputes and updates the digital twin state for a student
     """
 
-    # Fetch all events for the student
     events = db.query(AcademicEvent).filter(
         AcademicEvent.student_id == student_id
     ).all()
@@ -19,42 +17,36 @@ def update_digital_twin(student_id: str, db: Session):
         return None
 
     # ---------- Attendance ----------
-    attendance_events = [
-        e for e in events if e.event_type == "attendance"
-    ]
+    attendance_events = [e for e in events if e.event_type == "attendance"]
     attendance_avg = (
         sum(e.value for e in attendance_events) / len(attendance_events) * 100
-        if attendance_events else 0
+        if attendance_events else 0.0
     )
 
     # ---------- Homework ----------
-    homework_events = [
-        e for e in events if e.event_type == "homework"
-    ]
+    homework_events = [e for e in events if e.event_type == "homework"]
     homework_avg = (
         sum(e.value for e in homework_events) / len(homework_events) * 100
-        if homework_events else 0
+        if homework_events else 0.0
     )
 
     # ---------- Subject Averages ----------
-    def subject_avg(subject_name):
+    def subject_avg(subject_name: str) -> float:
         subject_events = [
             e for e in events
-            if e.event_type == "test" and e.subject == subject_name
+            if e.event_type == "test" and e.subject.lower() == subject_name.lower()
         ]
         return (
             sum(e.value for e in subject_events) / len(subject_events)
-            if subject_events else None
+            if subject_events else 0.0
         )
 
-    math_avg = subject_avg("Math")
-    science_avg = subject_avg("Science")
-    english_avg = subject_avg("English")
+    math_avg = subject_avg("math")
+    science_avg = subject_avg("science")
+    english_avg = subject_avg("english")
 
     # ---------- Behavior ----------
-    behavior_events = [
-        e for e in events if e.event_type == "behavior"
-    ]
+    behavior_events = [e for e in events if e.event_type == "behavior"]
     behavior_score = (
         sum(e.value for e in behavior_events) / len(behavior_events)
         if behavior_events else 0.5
@@ -76,9 +68,25 @@ def update_digital_twin(student_id: str, db: Session):
     ).first()
 
     if not twin:
-        twin = DigitalTwin(student_id=student_id)
+        twin = DigitalTwin(
+            student_id=student_id,
+            attendance_avg=0.0,
+            homework_avg=0.0,
+            math_avg=0.0,
+            science_avg=0.0,
+            english_avg=0.0,
+            behavior_score=0.5,
+            performance_trend=0.0,
+            risk_level="Low",
+            failure_probability=0.0,
+            predicted_score=0.0,
+            decision="Monitor",
+            triggered_rules=[],
+            recommendations=[]
+        )
         db.add(twin)
 
+    # ---------- Assign Updated Values ----------
     twin.attendance_avg = attendance_avg
     twin.homework_avg = homework_avg
     twin.math_avg = math_avg

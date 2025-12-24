@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models import User, Student, ParentStudent
-from app.services.role_checker import require_roles
+from app.models import Student, User
+from app.services.auth_utils import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -15,31 +15,27 @@ def get_db():
         db.close()
 
 
-@router.post("/assign-student")
-def assign_student_to_parent(
-    parent_username: str,
+@router.post("/create-student")
+def create_student(
     student_id: str,
+    name: str,
+    grade: str,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_roles(["ADMIN"]))
+    current_user: User = Depends(get_current_user)
 ):
-    parent = db.query(User).filter(User.username == parent_username).first()
-    if not parent or parent.role != "PARENT":
-        raise HTTPException(status_code=404, detail="Parent not found")
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admins only")
 
-    student = db.query(Student).filter(Student.student_id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-
-    existing = db.query(ParentStudent).filter(
-        ParentStudent.parent_id == parent.id,
-        ParentStudent.student_id == student_id
-    ).first()
-
+    existing = db.query(Student).filter(Student.student_id == student_id).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Already assigned")
+        raise HTTPException(status_code=400, detail="Student already exists")
 
-    mapping = ParentStudent(parent_id=parent.id, student_id=student_id)
-    db.add(mapping)
+    student = Student(
+        student_id=student_id,
+        name=name,
+        grade=grade
+    )
+    db.add(student)
     db.commit()
 
-    return {"message": "Student assigned to parent successfully"}
+    return {"message": "Student created"}
