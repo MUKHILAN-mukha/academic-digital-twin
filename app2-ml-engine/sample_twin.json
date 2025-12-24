@@ -1,0 +1,10 @@
+{
+  "student_id": "STD101",
+  "attendance_avg": 72,
+  "math_avg": 38,
+  "science_avg": 55,
+  "english_avg": 62,
+  "homework_avg": 0.45,
+  "behavior_score": 0.6,
+  "trend": -0.12
+}
