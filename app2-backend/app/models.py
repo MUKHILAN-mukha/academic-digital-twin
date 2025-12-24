@@ -52,9 +52,9 @@ class User(Base):
 class ParentStudent(Base):
     __tablename__ = "parent_student"
 
-    id = Column(Integer, primary_key=True)
-    parent_id = Column(Integer, ForeignKey("users.id"))
-    student_id = Column(String, nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    parent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    student_id = Column(String, ForeignKey("students.student_id"), nullable=False)
 
-    parent = relationship("User", back_populates="students")
-
+    parent = relationship("User")
+    student = relationship("Student")
