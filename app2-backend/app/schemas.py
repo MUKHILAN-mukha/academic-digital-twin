@@ -1,17 +1,12 @@
 from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
+from typing import List
 
-
-# -----------------------------
-# AUTH SCHEMAS
-# -----------------------------
-
+# 🚀 Auth
 class UserCreate(BaseModel):
     username: str
     password: str
     role: str
-
 
 class UserResponse(BaseModel):
     id: int
@@ -21,29 +16,20 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class Token(BaseModel):
     access_token: str
     token_type: str
 
-
-# -----------------------------
-# EVENT SCHEMAS
-# -----------------------------
-
+# 📌 Event schemas
 class AcademicEventCreate(BaseModel):
     student_id: str
     event_type: str
-    subject: str
+    subject: str | None = None
     value: float
     timestamp: datetime
     source: str
 
-
-# -----------------------------
-# DIGITAL TWIN SCHEMA
-# -----------------------------
-
+# 📌 Twin response
 class DigitalTwinResponse(BaseModel):
     student_id: str
 
@@ -67,11 +53,6 @@ class DigitalTwinResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-# -----------------------------
-# PARENT–STUDENT MAPPING
-# -----------------------------
 
 class ParentStudentCreate(BaseModel):
     parent_id: int
