@@ -2,6 +2,11 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from app.models import AcademicEvent, DigitalTwin
+from app.services.risk_engine import evaluate_risk
+from app.services.prediction_engine import (
+    predict_score,
+    predict_failure_probability
+)
 
 
 def update_digital_twin(student_id: str, db: Session):
@@ -34,7 +39,9 @@ def update_digital_twin(student_id: str, db: Session):
     def subject_avg(subject_name: str) -> float:
         subject_events = [
             e for e in events
-            if e.event_type == "test" and e.subject.lower() == subject_name.lower()
+            if e.event_type == "test"
+            and e.subject
+            and e.subject.lower() == subject_name.lower()
         ]
         return (
             sum(e.value for e in subject_events) / len(subject_events)
@@ -62,31 +69,46 @@ def update_digital_twin(student_id: str, db: Session):
     if len(test_events) >= 2:
         performance_trend = test_events[-1].value - test_events[0].value
 
+    # ---------- RISK ENGINE ----------
+    (
+        risk_level,
+        _risk_failure_probability,
+        decision,
+        triggered_rules,
+        recommendations
+    ) = evaluate_risk(
+        attendance_avg=attendance_avg,
+        math_avg=math_avg,
+        science_avg=science_avg,
+        english_avg=english_avg,
+        homework_avg=homework_avg,
+        behavior_score=behavior_score,
+        performance_trend=performance_trend
+    )
+
+    # ---------- PREDICTION ENGINE (🔥 MISSING PART FIXED) ----------
+    predicted_score = predict_score(
+        math_avg=math_avg,
+        science_avg=science_avg,
+        english_avg=english_avg,
+        attendance_avg=attendance_avg,
+        homework_avg=homework_avg,
+        behavior_score=behavior_score,
+        performance_trend=performance_trend
+    )
+
+    failure_probability = predict_failure_probability(predicted_score)
+
     # ---------- Update or Create Digital Twin ----------
     twin = db.query(DigitalTwin).filter(
         DigitalTwin.student_id == student_id
     ).first()
 
     if not twin:
-        twin = DigitalTwin(
-            student_id=student_id,
-            attendance_avg=0.0,
-            homework_avg=0.0,
-            math_avg=0.0,
-            science_avg=0.0,
-            english_avg=0.0,
-            behavior_score=0.5,
-            performance_trend=0.0,
-            risk_level="Low",
-            failure_probability=0.0,
-            predicted_score=0.0,
-            decision="Monitor",
-            triggered_rules=[],
-            recommendations=[]
-        )
+        twin = DigitalTwin(student_id=student_id)
         db.add(twin)
 
-    # ---------- Assign Updated Values ----------
+    # Aggregates
     twin.attendance_avg = attendance_avg
     twin.homework_avg = homework_avg
     twin.math_avg = math_avg
@@ -94,6 +116,15 @@ def update_digital_twin(student_id: str, db: Session):
     twin.english_avg = english_avg
     twin.behavior_score = behavior_score
     twin.performance_trend = performance_trend
+
+    # Intelligence
+    twin.risk_level = risk_level
+    twin.predicted_score = predicted_score
+    twin.failure_probability = failure_probability
+    twin.decision = decision
+    twin.triggered_rules = triggered_rules
+    twin.recommendations = recommendations
+
     twin.last_updated = datetime.utcnow()
 
     db.commit()
