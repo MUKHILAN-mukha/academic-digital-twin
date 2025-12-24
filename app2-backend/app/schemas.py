@@ -34,4 +34,13 @@ class DigitalTwinResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 

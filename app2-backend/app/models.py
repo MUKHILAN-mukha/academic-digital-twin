@@ -1,6 +1,8 @@
 from sqlalchemy import Column, String, Float, Integer, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -34,3 +36,25 @@ class DigitalTwin(Base):
     behavior_score = Column(Float)
     performance_trend = Column(Float)
     last_updated = Column(DateTime, default=datetime.utcnow)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)  # ADMIN, TEACHER, PARENT, STUDENT
+
+    students = relationship("ParentStudent", back_populates="parent")
+
+
+class ParentStudent(Base):
+    __tablename__ = "parent_student"
+
+    id = Column(Integer, primary_key=True)
+    parent_id = Column(Integer, ForeignKey("users.id"))
+    student_id = Column(String, nullable=False)
+
+    parent = relationship("User", back_populates="students")
+

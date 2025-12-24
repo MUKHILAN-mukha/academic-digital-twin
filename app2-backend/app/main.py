@@ -3,29 +3,28 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine
 from app.models import Base
-from app.routes import events, digital_twin
+from app.routes import events, digital_twin, auth
 
-app = FastAPI(
-    title="Academic Digital Twin Backend",
-    version="1.0"
-)
+# ✅ CREATE APP FIRST
+app = FastAPI(title="Academic Digital Twin Backend")
 
-# ✅ ADD THIS BLOCK (CORS) — RIGHT AFTER app = FastAPI(...)
+# ✅ THEN USE app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # frontend URL
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create tables
+# Create DB tables
 Base.metadata.create_all(bind=engine)
 
 # Register routes
+app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(digital_twin.router)
 
+
 @app.get("/")
 def root():
-    return {"status": "Member 2 backend running"}
+    return {"status": "Backend running"}

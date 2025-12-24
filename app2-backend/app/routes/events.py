@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.services.aggregator import update_digital_twin
 from app.database import SessionLocal
 from app.models import AcademicEvent, Student
 from app.schemas import AcademicEventCreate
+from app.services.role_checker import require_roles
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
-# Dependency to get DB session
+
 def get_db():
     db = SessionLocal()
     try:
@@ -17,7 +19,11 @@ def get_db():
 
 
 @router.post("/")
-def create_event(event: AcademicEventCreate, db: Session = Depends(get_db)):
+def create_event(
+    event: AcademicEventCreate,
+    db: Session = Depends(get_db),
+    user=Depends(require_roles(["TEACHER", "ADMIN"]))
+):
     # Ensure student exists
     student = db.query(Student).filter(
         Student.student_id == event.student_id
@@ -45,11 +51,10 @@ def create_event(event: AcademicEventCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_event)
 
-    # 🔁 Update Digital Twin
+    # Update Digital Twin
     update_digital_twin(event.student_id, db)
 
     return {
         "message": "Event recorded and digital twin updated",
         "event_id": new_event.event_id
     }
-
