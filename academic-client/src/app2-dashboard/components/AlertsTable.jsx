@@ -1,32 +1,17 @@
-function AlertsTable({ alerts }) {
+export default function AlertsTable({ rules }) {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h3 className="font-semibold mb-4">Alerts & Logs</h3>
+    <div className="p-4 bg-white rounded-lg shadow">
+      <h3 className="font-semibold mb-2">Alerts</h3>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-slate-500 border-b">
-            <th className="text-left py-2">Date</th>
-            <th>Type</th>
-            <th>Severity</th>
-            <th>Recipient</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {alerts.map((a, i) => (
-            <tr key={i} className="border-b last:border-none">
-              <td className="py-2">{a.date}</td>
-              <td className="text-center">{a.type}</td>
-              <td className="text-center">{a.severity}</td>
-              <td className="text-center">{a.recipient}</td>
-              <td className="text-center">{a.status}</td>
-            </tr>
+      {rules.length === 0 ? (
+        <p>No alerts 🎉</p>
+      ) : (
+        <ul className="list-disc ml-5">
+          {rules.map((r, i) => (
+            <li key={i}>{r}</li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
     </div>
   );
 }
-
-export default AlertsTable;

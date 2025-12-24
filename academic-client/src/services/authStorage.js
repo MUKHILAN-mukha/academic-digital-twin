@@ -1,11 +1,10 @@
-export const setAuth = (token, role) => {
-  localStorage.setItem("token", token);
-  localStorage.setItem("role", role);
+export const saveAuth = (data) =>
+  localStorage.setItem("auth", JSON.stringify(data));
+
+export const getAuth = () => {
+  const data = localStorage.getItem("auth");
+  return data ? JSON.parse(data) : null;
 };
 
-export const getRole = () => localStorage.getItem("role");
-export const getToken = () => localStorage.getItem("token");
-
-export const logout = () => {
-  localStorage.clear();
-};
+export const clearAuth = () =>
+  localStorage.removeItem("auth");

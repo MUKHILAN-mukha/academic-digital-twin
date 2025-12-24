@@ -1,20 +1,24 @@
 import { createContext, useContext, useState } from "react";
+import { saveAuth, getAuth, clearAuth } from "../services/authStorage";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("auth");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState(getAuth());
 
   const login = (data) => {
-    localStorage.setItem("auth", JSON.stringify(data));
-    setUser(data);
+    const authData = {
+      token: data.access_token,
+      role: data.role,
+      username: data.username,
+    };
+
+    saveAuth(authData);
+    setUser(authData);
   };
 
   const logout = () => {
-    localStorage.removeItem("auth");
+    clearAuth();
     setUser(null);
   };
 

@@ -1,21 +1,9 @@
-const API_BASE = "http://127.0.0.1:8000";
+import api from "./api";
 
-export async function login(username, password) {
-  const formData = new URLSearchParams();
-  formData.append("username", username);
-  formData.append("password", password);
-
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: formData,
+export const login = async (username, password) => {
+  const res = await api.post("/auth/login", {
+    username,
+    password,
   });
-
-  if (!res.ok) {
-    throw new Error("Invalid credentials");
-  }
-
-  return await res.json();
-}
+  return res.data; // 🔴 IMPORTANT
+};

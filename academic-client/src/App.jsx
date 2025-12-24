@@ -1,24 +1,21 @@
+import { useAuth } from "./context/AuthContext";
+import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import EntryDashboard from "./pages/Dashboard";
-import AnalyticsDashboard from "./app2-dashboard/pages/AnalyticsDashboard";
-import { getRole } from "./services/authStorage";
+import StudentView from "./app2-dashboard/pages/StudentView";
 
 function App() {
-  const role = getRole();
+  const auth = useAuth();
 
-  if (!role) {
-    return <Login />;
+  if (!auth) {
+    return <p style={{ padding: 40 }}>Auth not ready</p>;
   }
 
-  if (role === "ADMIN" || role === "STUDENT") {
-    return <EntryDashboard />;
-  }
+  const { user } = auth;
 
-  if (role === "TEACHER" || role === "PARENT") {
-    return <AnalyticsDashboard />;
-  }
+  if (!user) return <Login />;
 
-  return <Login />;
+  if (user.role === "STUDENT") return <StudentView />;
+  return <Dashboard />;
 }
 
 export default App;

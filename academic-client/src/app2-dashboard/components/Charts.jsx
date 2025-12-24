@@ -1,12 +1,13 @@
-function Charts() {
+export default function Charts({ twin }) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow">
-      <h3 className="font-semibold mb-2">Performance Trends</h3>
-      <p className="text-sm text-slate-500">
-        Charts will be integrated here (mock / future backend).
-      </p>
+    <div className="p-4 bg-white rounded-lg shadow">
+      <h3 className="font-semibold mb-4">Performance Snapshot</h3>
+
+      <ul className="space-y-2">
+        <li>📈 Performance Trend: {twin.performance_trend}</li>
+        <li>🎯 Predicted Score: {twin.predicted_score}</li>
+        <li>⚠ Failure Probability: {twin.failure_probability}</li>
+      </ul>
     </div>
   );
 }
-
-export default Charts;
